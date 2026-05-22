@@ -113,11 +113,15 @@ class Settings(BaseSettings):
     # fecha antecipadamente no preço de mercado em vez de esperar
     # encostar no stop. Princípio: cortar perda pequena > segurar
     # esperando milagre.
+    # 
+    # ATENÇÃO: Se você está perdendo muito dinheiro com fechamentos
+    # antecipados que não chegam ao TP, aumente os thresholds abaixo
+    # para ser MENOS agressivo nas saídas antecipadas.
     exit_reeval_enabled: bool = True
-    exit_mc_ev_bailout: float = -0.5         # EV abaixo disso = fecha
-    exit_mc_p_tp_bailout: float = 0.15       # P(TP) abaixo disso = fecha
-    exit_mc_horizon_bars: int = 24           # horizonte do MC de saída (menor que entrada)
-    exit_ob_flip_threshold: float = 0.35     # imbalance contra trade ≥ isso = fecha
+    exit_mc_ev_bailout: float = -1.5         # EV abaixo disso = fecha (mais negativo = menos agressivo)
+    exit_mc_p_tp_bailout: float = 0.08       # P(TP) abaixo disso = fecha (menor = menos agressivo)
+    exit_mc_horizon_bars: int = 24           # horizonte do MC de saída (menor = mais conservador)
+    exit_ob_flip_threshold: float = 0.50     # imbalance contra trade ≥ isso = fecha (maior = menos agressivo)
     exit_trend_flip_enabled: bool = True     # fecha se macro trend reverteu
     exit_time_stale_hours: float = 0.0       # 0 = desabilita time-stop; 8 = fecha após 8h
 

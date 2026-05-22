@@ -1,1 +1,31 @@
-Nothing to output - the changes consist only of source code files (.py) and no build artifacts, dependencies, or temporary files that need to be ignored.
+```
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# Logs
+*.log
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Cache directories
+.mypy_cache/
+.pytest_cache/
+```
