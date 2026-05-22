@@ -14,6 +14,7 @@ import pandas as pd
 
 from ai import build_default_client
 from ai.analyst import AIAnalyst
+from ai.learner import AdaptiveLearner, get_learner
 from alerts.formatter import format_market_brief, format_signal
 from alerts.telegram import TelegramNotifier
 from core.logger import logger
@@ -51,6 +52,7 @@ class CopilotEngine:
         self.ai_client = build_default_client()
         self.analyst = AIAnalyst(self.ai_client)
         self.paper = PaperTrader() if enable_paper_trade else None
+        self.learner = get_learner()  # Adaptive learning system
 
         # ---- Live state (read by dashboard) ----
         self.contexts: dict[str, MarketContext] = {}
@@ -60,6 +62,10 @@ class CopilotEngine:
         self.last_scan_at: datetime | None = None
         self.scan_count = 0
         self._running = False
+        
+        # ---- Adaptive learning state ----
+        self._trades_since_last_analysis = 0
+        self._learning_analysis_interval = 10  # Analyze every N trades
 
     async def stop(self) -> None:
         self._running = False
@@ -147,8 +153,16 @@ class CopilotEngine:
                 continue
 
             score, score_reasons = compute_score(ctx, res.setup_timeframe, res.side, plan.risk_reward)
-            min_score = settings.min_score_to_alert
+            
+            # Use adaptive minimum score per strategy if available
+            adaptive_min_score = self.learner.get_adjusted_min_score(strat.name)
+            min_score = adaptive_min_score
+            
             if score < min_score:
+                logger.debug(
+                    "Skip {} {} {}: score={} < adaptive_min={}",
+                    symbol, strat.name, res.side.value, score, min_score
+                )
                 continue
 
             # ===== Monte Carlo pré-trade (com drift do Order Book) =====
@@ -365,7 +379,67 @@ class CopilotEngine:
                 if snap:
                     prices[sym] = snap.close
                     break
+        
+        # Capture closed trades before marking to market
+        closed_trades = []
+        if self.paper.open_trades:
+            # Check which trades will be closed
+            for trade_id, trade in list(self.paper.open_trades.items()):
+                price = prices.get(trade.symbol)
+                if price is not None:
+                    should_close = False
+                    if trade.side == Side.LONG:
+                        if price <= trade.stop or price >= trade.take_profit:
+                            should_close = True
+                    else:
+                        if price >= trade.stop or price <= trade.take_profit:
+                            should_close = True
+                    if should_close:
+                        closed_trades.append(trade)
+        
         self.paper.mark_to_market(prices)
+        
+        # Record closed trades for learning
+        for trade in closed_trades:
+            self.learner.record_trade(trade)
+            self._trades_since_last_analysis += 1
+            
+            # Check if we should analyze and adapt
+            if self._trades_since_last_analysis >= self._learning_analysis_interval:
+                self._run_learning_analysis()
+                self._trades_since_last_analysis = 0
+    
+    def _run_learning_analysis(self) -> None:
+        """Run adaptive learning analysis on recent trades."""
+        recommendations = self.learner.analyze_and_adapt(last_n_trades=self._learning_analysis_interval)
+        
+        if recommendations:
+            logger.info("=== Adaptive Learning: {} recommendations ===", len(recommendations))
+            for rec in recommendations:
+                logger.info(
+                    "[{}] {}: {} → {} (conf: {:.0%}) - {}",
+                    rec.strategy, rec.change_type, rec.current_value, 
+                    rec.recommended_value, rec.confidence, rec.reason
+                )
+            
+            # Apply recommendations automatically
+            self._apply_learning_recommendations(recommendations)
+    
+    def _apply_learning_recommendations(self, recommendations: list) -> None:
+        """Apply learning recommendations to adjust strategy behavior."""
+        # Recommendations are already applied in the learner's adaptive_params
+        # Here we could add additional logic like notifying via Telegram
+        if self.notifier.is_configured:
+            summary = self.learner.get_summary()
+            msg = f"🧠 Aprendizado Adaptativo\n\n"
+            msg += f"Trades analisados: {summary['total_trades_analyzed']}\n"
+            for strat, metrics in summary['strategies'].items():
+                msg += f"\n{strat}:\n"
+                msg += f"  Winrate: {metrics['winrate']:.1f}%\n"
+                msg += f"  PnL: ${metrics['total_pnl']:+.2f}\n"
+                msg += f"  Profit Factor: {metrics['profit_factor']:.2f}"
+            # Send asynchronously (fire and forget)
+            asyncio.create_task(self.notifier.send(msg))
 
     async def scan_once(self) -> list[Signal]:
         results = await asyncio.gather(*(self.scan_symbol(s) for s in self.symbols))

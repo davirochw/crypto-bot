@@ -74,6 +74,9 @@ class PaperTrader:
             leverage=round(lev, 2),
             opened_at=datetime.now(timezone.utc),
             fees_paid=fee,
+            strategy=signal.strategy,
+            signal_score=signal.score,
+            setup_timeframe=signal.timeframe,
         )
         self.open_trades[trade_id] = trade
         self._journal({"event": "open", **trade.model_dump(mode="json")})

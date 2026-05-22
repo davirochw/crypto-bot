@@ -140,6 +140,10 @@ class PaperTrade(BaseModel):
     pnl: float | None = None
     fees_paid: float = 0.0
     reason_close: str | None = None
+    # Metadata para aprendizado adaptativo
+    strategy: str = "unknown"    # estratégia que gerou o sinal
+    signal_score: int = 0        # score do sinal original
+    setup_timeframe: str = "15m" # timeframe do setup
 
     @property
     def is_open(self) -> bool:
