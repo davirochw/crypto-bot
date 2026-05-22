@@ -322,7 +322,16 @@ class CopilotEngine:
                 time_stale_hours=settings.exit_time_stale_hours,
             )
             if decision.action == "CLOSE":
-                self.paper.close_at_market(tid, current_price, decision.reason)
+                closed_trade = self.paper.close_at_market(tid, current_price, decision.reason)
+                # Registra trade fechado antecipadamente para aprendizado
+                if closed_trade and settings.exit_reeval_enabled:
+                    self.learner.record_trade(closed_trade)
+                    self._trades_since_last_analysis += 1
+                    
+                    # Check if we should analyze and adapt
+                    if self._trades_since_last_analysis >= self._learning_analysis_interval:
+                        self._run_learning_analysis()
+                        self._trades_since_last_analysis = 0
             else:
                 # KEEP — log em DEBUG (não polui INFO) com métricas atuais.
                 logger.debug(

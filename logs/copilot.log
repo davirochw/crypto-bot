@@ -1,0 +1,37 @@
+2026-05-22 02:22:10 | INFO    | paper_trade.simulator:close_at_market:172 | [PAPER] EARLY_CLOSE BTCUSDT LONG test pnl=+9.60 (test_reason)
+2026-05-22 02:22:45 | INFO    | paper_trade.simulator:close_at_market:172 | [PAPER] EARLY_CLOSE BTCUSDT LONG test pnl=+9.60 (test_reason)
+2026-05-22 02:22:59 | INFO    | paper_trade.simulator:mark_to_market:135 | [PAPER] CLOSE BTCUSDT t1 pnl=39.60 (take)
+2026-05-22 02:22:59 | INFO    | paper_trade.simulator:mark_to_market:135 | [PAPER] CLOSE ETHUSDT t2 pnl=-16.87 (stop)
+2026-05-22 02:22:59 | INFO    | paper_trade.simulator:close_at_market:172 | [PAPER] EARLY_CLOSE BNBUSDT SHORT t3 pnl=+3.25 (book_flip)
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t0 PnL=-15.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t1 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t2 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t3 PnL=-15.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t4 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t5 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t6 PnL=-15.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t7 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t8 PnL=+20.00
+2026-05-22 02:23:13 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t9 PnL=-15.00
+2026-05-22 02:23:13 | INFO    | ai.learner:_analyze_strategy:270 | Analyzing breakout_volume: 10 trades, 60.0% winrate, PnL=+60.00, avg_score=75.0
+2026-05-22 02:23:13 | INFO    | ai.learner:save_checkpoint:134 | Saved learner checkpoint
+2026-05-22 02:23:13 | INFO    | ai.learner:analyze_and_adapt:256 | Generated 0 learning recommendations
+2026-05-22 02:23:25 | INFO    | ai.learner:_load_checkpoint:100 | Loaded learner checkpoint: 10 trades analyzed previously
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t0 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t1 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t2 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t3 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t4 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t5 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t6 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t7 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t8 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:record_trade:171 | Recorded trade for learning: breakout_volume t9 PnL=-15.00
+2026-05-22 02:23:25 | INFO    | ai.learner:_analyze_strategy:270 | Analyzing breakout_volume: 10 trades, 0.0% winrate, PnL=-150.00, avg_score=65.0
+2026-05-22 02:23:25 | INFO    | ai.learner:save_checkpoint:134 | Saved learner checkpoint
+2026-05-22 02:23:25 | INFO    | ai.learner:analyze_and_adapt:256 | Generated 2 learning recommendations
+2026-05-22 02:24:14 | INFO    | paper_trade.simulator:mark_to_market:135 | [PAPER] CLOSE BTCUSDT t0 pnl=39.60 (take)
+2026-05-22 02:24:15 | INFO    | paper_trade.simulator:mark_to_market:135 | [PAPER] CLOSE BTCUSDT t1 pnl=-20.40 (stop)
+2026-05-22 02:24:15 | INFO    | paper_trade.simulator:mark_to_market:135 | [PAPER] CLOSE BTCUSDT t2 pnl=39.60 (take)
+2026-05-22 02:24:15 | INFO    | paper_trade.simulator:close_at_market:172 | [PAPER] EARLY_CLOSE BTCUSDT SHORT t3 pnl=+9.60 (reeval_test)
+2026-05-22 02:24:15 | INFO    | paper_trade.simulator:close_at_market:172 | [PAPER] EARLY_CLOSE BTCUSDT LONG t4 pnl=-4.40 (reeval_test)

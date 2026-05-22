@@ -176,12 +176,31 @@ class PaperTrader:
         return trade
 
     def stats(self) -> dict[str, float | int]:
+        # Separa trades por tipo de fechamento para análise mais precisa
+        tp_wins = [t for t in self.closed_trades if (t.pnl or 0) > 0 and t.reason_close == "take"]
+        sl_losses = [t for t in self.closed_trades if (t.pnl or 0) <= 0 and t.reason_close == "stop"]
+        
+        # Win rate tradicional (todos os trades fechados)
         wins = [t for t in self.closed_trades if (t.pnl or 0) > 0]
         losses = [t for t in self.closed_trades if (t.pnl or 0) <= 0]
         total = len(self.closed_trades)
         winrate = (len(wins) / total * 100) if total else 0.0
+        
+        # Win rate "real" (só conta trades que foram até TP ou SL)
+        decisive_trades = [t for t in self.closed_trades if t.reason_close in ("take", "stop")]
+        real_wins = [t for t in decisive_trades if (t.pnl or 0) > 0]
+        real_winrate = (len(real_wins) / len(decisive_trades) * 100) if decisive_trades else 0.0
+        
+        # Fechamentos antecipados = qualquer coisa que NÃO seja TP ou SL
+        early_closes = [t for t in self.closed_trades if t.reason_close not in ("take", "stop")]
+        
         avg_win = sum(t.pnl for t in wins if t.pnl is not None) / len(wins) if wins else 0.0
         avg_loss = sum(t.pnl for t in losses if t.pnl is not None) / len(losses) if losses else 0.0
+        
+        # Impacto dos fechamentos antecipados
+        early_pnl = sum(t.pnl for t in early_closes if t.pnl is not None)
+        early_count = len(early_closes)
+        
         return {
             "balance": round(self.balance, 2),
             "starting_balance": self.starting_balance,
@@ -190,6 +209,10 @@ class PaperTrader:
             "open": len(self.open_trades),
             "closed": total,
             "winrate_pct": round(winrate, 2),
+            "real_winrate_pct": round(real_winrate, 2),  # Só TP/SL
+            "decisive_trades": len(decisive_trades),
+            "early_closes": early_count,
+            "early_pnl": round(early_pnl, 2),
             "avg_win": round(avg_win, 2),
             "avg_loss": round(avg_loss, 2),
             "net_pnl": round(self.balance - self.starting_balance, 2),
