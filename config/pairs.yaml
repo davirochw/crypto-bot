@@ -1,0 +1,44 @@
+# =========================================================
+# Crypto Copilot — Pair configuration
+# Override per-pair tuning here. Symbols not listed use defaults.
+# =========================================================
+
+defaults:
+  timeframes: [4h, 1h, 15m, 5m]
+  min_score_to_alert: 70
+  atr_stop_mult: 2.5
+  rr_ratio: 2.0
+
+# Lista atual ativa via SYMBOLS no .env — 20 pares cobrindo majors,
+# L1s, DeFi, L2s e AI. Apenas pares com necessidade real de override
+# aparecem aqui; o resto usa os `defaults` acima sem ruído.
+pairs:
+  - symbol: BTCUSDT
+    enabled: true
+    notes: "Bellwether — guia regime macro."
+  - symbol: ETHUSDT
+    enabled: true
+  - symbol: SOLUSDT
+    enabled: true
+    atr_stop_mult: 2.8     # vol acima da média dos majors
+  - symbol: XRPUSDT
+    enabled: true
+  - symbol: BNBUSDT
+    enabled: true
+  - symbol: DOGEUSDT
+    enabled: true
+    atr_stop_mult: 3.0     # meme — movimentos de cauda mais largos
+    min_score_to_alert: 75
+  - symbol: TAOUSDT
+    enabled: true
+    atr_stop_mult: 3.0     # AI volátil, pumps/dumps em headlines
+    min_score_to_alert: 75
+  - symbol: SUIUSDT
+    enabled: true
+    atr_stop_mult: 2.8
+  - symbol: APTUSDT
+    enabled: true
+    atr_stop_mult: 2.8
+  # Os demais (ADA, AVAX, LINK, DOT, TRX, LTC, UNI, AAVE, NEAR, ARB, OP)
+  # usam defaults — adicione aqui só quando começarem a dar muito
+  # whipsaw ou ficarem mudos demais.

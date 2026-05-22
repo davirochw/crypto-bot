@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Copilot</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <span class="dot" id="status-dot"></span>
+      <h1>Crypto <span>Copilot</span></h1>
+    </div>
+    <div class="meta">
+      <span>AI: <b>{{ ai_provider }}</b></span>
+      <span>Min score: <b>{{ min_score }}</b></span>
+      <span id="scan-info">scan #0</span>
+      <button id="brief-btn">Resumo IA</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Mercado</h2>
+    <table id="contexts-table">
+      <thead>
+        <tr>
+          <th>Par</th><th>Macro</th><th>Regime</th><th>Preço</th>
+          <th>RSI 1h</th><th>ATR</th><th>Funding</th><th>L/S</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Sinais recentes</h2>
+    <div id="signals-list" class="cards"></div>
+  </section>
+
+  <section>
+    <h2>Paper trade</h2>
+    <div id="paper-stats" class="kpis"></div>
+    <h3>Posições abertas</h3>
+    <table id="paper-open">
+      <thead><tr>
+        <th>Par</th><th>Lado</th><th>Entry</th><th>Stop</th><th>Take</th>
+        <th>Notional</th><th>Margem</th><th>Lev</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <small>⚠️ Copilot apenas. Não constitui recomendação de investimento.</small>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
