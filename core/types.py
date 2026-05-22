@@ -144,6 +144,12 @@ class PaperTrade(BaseModel):
     strategy: str = "unknown"    # estratégia que gerou o sinal
     signal_score: int = 0        # score do sinal original
     setup_timeframe: str = "15m" # timeframe do setup
+    # Trailing stop metadata
+    trailing_stop_activated: bool = False  # Se trailing stop já foi ativado
+    highest_pnl_pct: float = 0.0           # Maior lucro % alcançado (para trailing)
+    # Pyramiding metadata
+    pyramiding_additions: int = 0          # Quantas adições foram feitas
+    average_entry: float = 0.0             # Preço médio após adições
 
     @property
     def is_open(self) -> bool:

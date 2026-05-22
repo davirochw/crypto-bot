@@ -113,13 +113,41 @@ class Settings(BaseSettings):
     # fecha antecipadamente no preço de mercado em vez de esperar
     # encostar no stop. Princípio: cortar perda pequena > segurar
     # esperando milagre.
+    # 
+    # MODO CAPITAL LIMITADO: Se você tem pouco capital e opera poucos trades,
+    # seja MENOS agressivo nos fechamentos antecipados. Deixe o trade respirar.
     exit_reeval_enabled: bool = True
-    exit_mc_ev_bailout: float = -0.5         # EV abaixo disso = fecha
-    exit_mc_p_tp_bailout: float = 0.15       # P(TP) abaixo disso = fecha
-    exit_mc_horizon_bars: int = 24           # horizonte do MC de saída (menor que entrada)
-    exit_ob_flip_threshold: float = 0.35     # imbalance contra trade ≥ isso = fecha
-    exit_trend_flip_enabled: bool = True     # fecha se macro trend reverteu
+    exit_mc_ev_bailout: float = -2.5         # EV abaixo disso = fecha (mais negativo = menos agressivo)
+    exit_mc_p_tp_bailout: float = 0.05       # P(TP) abaixo disso = fecha (menor = menos agressivo)
+    exit_mc_horizon_bars: int = 36           # horizonte do MC de saída (maior = mais paciente)
+    exit_ob_flip_threshold: float = 0.65     # imbalance contra trade ≥ isso = fecha (maior = menos agressivo)
+    exit_trend_flip_enabled: bool = False    # DESLIGADO: não fecha só porque trend macro reverteu
     exit_time_stale_hours: float = 0.0       # 0 = desabilita time-stop; 8 = fecha após 8h
+    
+    # ---- Trailing Stop (NOVO) ----
+    # Quando trade está em lucro, move o stop para cima/baixo automaticamente
+    # para proteger lucro e potencialmente capturar movimentos maiores.
+    # Ideal para quem tem pouco capital: deixa lucro correr, protege ganhos.
+    trailing_stop_enabled: bool = True
+    trailing_stop_activation_pct: float = 0.8   # Ativa trailing quando lucro ≥ 0.8%
+    trailing_stop_distance_pct: float = 0.4     # Distância do stop ao preço atual (0.4%)
+    trailing_stop_step_pct: float = 0.2         # Move stop a cada 0.2% de novo lucro
+    
+    # ---- Pyramiding (NOVO) ----
+    # Adiciona à posição vencedora quando trade vai bem.
+    # Estratégia agressiva para multiplicar gains com pouco capital.
+    pyramiding_enabled: bool = False            # Cuidado: aumenta risco!
+    pyramiding_max_additions: int = 1           # Máximo de adições por trade
+    pyramiding_activation_pct: float = 1.0      # Adiciona quando lucro ≥ 1.0%
+    pyramiding_addition_size_pct: float = 0.5   # Tamanho da adição (% do saldo disponível)
+    
+    # ---- Risk/Reward Dinâmico (NOVO) ----
+    # Ajusta R:R baseado no tamanho do saldo. Saldo pequeno = R:R maior.
+    # Isso permite buscar trades mais lucrativos quando você precisa crescer rápido.
+    dynamic_rr_enabled: bool = True
+    dynamic_rr_min_balance: float = 500.0       # Se saldo < isso, usa R:R mais agressivo
+    dynamic_rr_aggressive: float = 3.0          # R:R quando saldo é pequeno (padrão: 2.0)
+    dynamic_rr_conservative: float = 2.0        # R:R quando saldo é grande
 
     # ---- Dashboard ----
     dashboard_host: str = "127.0.0.1"

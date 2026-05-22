@@ -88,12 +88,22 @@ class PaperTrader:
         return trade
 
     def mark_to_market(self, prices: dict[str, float]) -> list[PaperTrade]:
-        """Close trades whose stop or take-profit was crossed. Returns closed trades."""
+        """Close trades whose stop or take-profit was crossed. Returns closed trades.
+        
+        Inclui lógica de Trailing Stop para proteger lucros quando habilitado.
+        """
         closed_now: list[PaperTrade] = []
+        
         for trade_id, trade in list(self.open_trades.items()):
             price = prices.get(trade.symbol)
             if price is None:
                 continue
+            
+            # ---- TRAILING STOP (NOVO) ----
+            # Se habilitado e trade está em lucro, ajusta stop dinamicamente
+            if settings.trailing_stop_enabled:
+                self._apply_trailing_stop(trade, price)
+            
             exit_price: float | None = None
             reason: str | None = None
             if trade.side == Side.LONG:
@@ -135,6 +145,47 @@ class PaperTrader:
             logger.info("[PAPER] CLOSE {} {} pnl={:.2f} ({})",
                         trade.symbol, trade.id, trade.pnl, reason)
         return closed_now
+    
+    def _apply_trailing_stop(self, trade: PaperTrade, current_price: float) -> None:
+        """Aplica trailing stop se trade está em lucro.
+        
+        Lógica:
+        1. Calcula lucro atual em %
+        2. Se lucro >= activation_pct, ativa trailing
+        3. Move stop para: preço_atual ± (distance_pct * preço_atual)
+        4. Só move se for favorável (não aumenta risco)
+        """
+        # Calcula lucro não realizado em %
+        if trade.side == Side.LONG:
+            pnl_pct = (current_price - trade.entry) / trade.entry * 100
+        else:
+            pnl_pct = (trade.entry - current_price) / trade.entry * 100
+        
+        # Só aplica se já está em lucro e acima do threshold de ativação
+        if pnl_pct < settings.trailing_stop_activation_pct:
+            return
+        
+        # Calcula novo stop baseado no preço atual
+        if trade.side == Side.LONG:
+            new_stop = current_price * (1 - settings.trailing_stop_distance_pct / 100)
+            # Só move se for pra cima (protege lucro)
+            if new_stop > trade.stop:
+                old_stop = trade.stop
+                trade.stop = new_stop
+                logger.debug(
+                    "[TRAILING] {} {}: stop movido de {:.6g} pra {:.6g} (lucro atual: +{:.2f}%)",
+                    trade.symbol, trade.id, old_stop, new_stop, pnl_pct
+                )
+        else:  # SHORT
+            new_stop = current_price * (1 + settings.trailing_stop_distance_pct / 100)
+            # Só move se for pra baixo (protege lucro)
+            if new_stop < trade.stop:
+                old_stop = trade.stop
+                trade.stop = new_stop
+                logger.debug(
+                    "[TRAILING] {} {}: stop movido de {:.6g} pra {:.6g} (lucro atual: +{:.2f}%)",
+                    trade.symbol, trade.id, old_stop, new_stop, pnl_pct
+                )
 
     def close_at_market(
         self,
@@ -176,12 +227,31 @@ class PaperTrader:
         return trade
 
     def stats(self) -> dict[str, float | int]:
+        # Separa trades por tipo de fechamento para análise mais precisa
+        tp_wins = [t for t in self.closed_trades if (t.pnl or 0) > 0 and t.reason_close == "take"]
+        sl_losses = [t for t in self.closed_trades if (t.pnl or 0) <= 0 and t.reason_close == "stop"]
+        
+        # Win rate tradicional (todos os trades fechados)
         wins = [t for t in self.closed_trades if (t.pnl or 0) > 0]
         losses = [t for t in self.closed_trades if (t.pnl or 0) <= 0]
         total = len(self.closed_trades)
         winrate = (len(wins) / total * 100) if total else 0.0
+        
+        # Win rate "real" (só conta trades que foram até TP ou SL)
+        decisive_trades = [t for t in self.closed_trades if t.reason_close in ("take", "stop")]
+        real_wins = [t for t in decisive_trades if (t.pnl or 0) > 0]
+        real_winrate = (len(real_wins) / len(decisive_trades) * 100) if decisive_trades else 0.0
+        
+        # Fechamentos antecipados = qualquer coisa que NÃO seja TP ou SL
+        early_closes = [t for t in self.closed_trades if t.reason_close not in ("take", "stop")]
+        
         avg_win = sum(t.pnl for t in wins if t.pnl is not None) / len(wins) if wins else 0.0
         avg_loss = sum(t.pnl for t in losses if t.pnl is not None) / len(losses) if losses else 0.0
+        
+        # Impacto dos fechamentos antecipados
+        early_pnl = sum(t.pnl for t in early_closes if t.pnl is not None)
+        early_count = len(early_closes)
+        
         return {
             "balance": round(self.balance, 2),
             "starting_balance": self.starting_balance,
@@ -190,6 +260,10 @@ class PaperTrader:
             "open": len(self.open_trades),
             "closed": total,
             "winrate_pct": round(winrate, 2),
+            "real_winrate_pct": round(real_winrate, 2),  # Só TP/SL
+            "decisive_trades": len(decisive_trades),
+            "early_closes": early_count,
+            "early_pnl": round(early_pnl, 2),
             "avg_win": round(avg_win, 2),
             "avg_loss": round(avg_loss, 2),
             "net_pnl": round(self.balance - self.starting_balance, 2),

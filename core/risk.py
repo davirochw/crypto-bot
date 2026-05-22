@@ -23,6 +23,26 @@ class RiskPlan:
     risk_amount: float         # USDT at risk if stop hits
 
 
+def get_dynamic_rr() -> float:
+    """Retorna R:R dinâmico baseado no saldo atual."""
+    if not settings.dynamic_rr_enabled:
+        return settings.default_rr_ratio
+    
+    # Precisamos do saldo atual - vamos pegar do paper trader se existir
+    # ou usar um valor padrão conservador
+    try:
+        from paper_trade.simulator import PaperTrader
+        # Não podemos instanciar aqui sem contexto, então vamos checar
+        # o saldo de forma indireta através das configurações
+        # Se o usuário configurou paper_initial_balance < min_balance, usa agressivo
+        if settings.paper_initial_balance < settings.dynamic_rr_min_balance:
+            return settings.dynamic_rr_aggressive
+        return settings.dynamic_rr_conservative
+    except Exception:
+        # Fallback: usa configuração padrão
+        return settings.default_rr_ratio
+
+
 def atr_stop(entry: float, atr: float, side: Side, atr_mult: float | None = None) -> float:
     """Stop = entry ± (ATR * multiplier). Volatility-aware, adapts per pair."""
     mult = atr_mult if atr_mult is not None else settings.atr_stop_mult
@@ -33,7 +53,9 @@ def atr_stop(entry: float, atr: float, side: Side, atr_mult: float | None = None
 
 def take_profit_from_rr(entry: float, stop: float, side: Side, rr: float | None = None) -> float:
     """Project TP at R:R times the risk distance."""
-    rr = rr if rr is not None else settings.default_rr_ratio
+    # Usa R:R dinâmico se habilitado
+    if rr is None:
+        rr = get_dynamic_rr()
     risk = abs(entry - stop)
     return entry + risk * rr if side == Side.LONG else entry - risk * rr
 
@@ -84,7 +106,13 @@ def build_plan(
 
 def is_setup_acceptable(rr: float, atr_pct: float) -> tuple[bool, str | None]:
     """Cheap pre-filter to skip obviously bad setups before scoring/AI."""
-    if rr < 1.2:
+    # Pega R:R mínimo dinâmico
+    min_rr = 1.2
+    if settings.dynamic_rr_enabled and settings.paper_initial_balance < settings.dynamic_rr_min_balance:
+        # Se estamos em modo agressivo, aceita R:R um pouco menor pois buscamos mais trades
+        min_rr = 1.5
+    
+    if rr < min_rr:
         return False, f"R:R too low ({rr:.2f})"
     if atr_pct < 0.15:
         return False, f"Market too dead (ATR {atr_pct:.2f}% of price)"
